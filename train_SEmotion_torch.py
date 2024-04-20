@@ -1,4 +1,3 @@
-# train_SFace_torch备份
 import os, argparse, sklearn
 import torch
 import torch.nn as nn

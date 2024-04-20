@@ -225,101 +225,60 @@ class MSMDAERNet(nn.Module):
 
             pred_src = eval(DSC_name)(data_src_DSFE)
 
-            cls_loss = F.nll_loss(F.log_softmax(pred_src, dim=1), label_src.squeeze())
-            # return cls_loss, mmd_loss, disc_loss
+            # cls_loss = F.nll_loss(F.log_softmax(pred_src, dim=1), label_src.squeeze())
+            return cls_loss, mmd_loss, disc_loss
 
 
 
   
-            # --------------------------- cos(theta) & phi(theta) ---------------------------
-            # # data_src  label_src
-            # # if self.device_id == None:
-            # cosine = F.linear(F.normalize(pred_src), F.normalize(self.weight))
-            # # --------------------------- s*cos(theta) ---------------------------
-            # output = cosine * self.s
-            # # --------------------------- sface loss ---------------------------
-
-            # one_hot = torch.zeros(cosine.size())
-            # one_hot = one_hot.to(self.device)
-            # one_hot.scatter_(1, label_src.view(-1, 1), 1)
-
-            # zero_hot = torch.ones(cosine.size())
-            # zero_hot = zero_hot.to(self.device)
-            # zero_hot.scatter_(1, label_src.view(-1, 1), 0)
-
-
-            # WyiX = torch.sum(one_hot * output, 1)
-            # # with torch.no_grad():
-            #     # theta_yi = torch.acos(WyiX / self.s)
-            #     # sigmoid
-            #     # theta_yi = torch.acos(torch.clamp(WyiX / self.s, min=-1.0, max=1.0))
-            #     # weight_yi = 1.0 / (1.0 + torch.exp(-self.k * (theta_yi - self.a)))
-                
-            #     # steep
-            #     # tmpA = theta_yi - self.a
-            #     # weight_yi = torch.sign(torch.max(tmpA, torch.zeros_like(tmpA)))
-            # # intra_loss = - weight_yi * WyiX
-            # # Constant
-            # intra_loss = - WyiX
-
-            # Wj = zero_hot * output
-            # # with torch.no_grad():
-            #     # theta_j = torch.acos(Wj / self.s)
-            #     # sigmoid
-            #     # theta_j = torch.acos(torch.clamp(Wj / self.s, min=-1.0, max=1.0))
-            #     # weight_j = 1.0 / (1.0 + torch.exp(self.k * (theta_j - self.b)))
-                
-            #     # steep
-            #     # tmpB = self.b - theta_j
-            #     # weight_j = torch.sign(torch.max(tmpB, torch.zeros_like(tmpB)))
-            # # inter_loss = torch.sum(weight_j * Wj, 1)
-            # # Constant
-            # inter_loss = torch.sum( Wj, 1)
-
-            # intra_inter_loss =  intra_loss.mean() + inter_loss.mean()
-            
-          
-            # # Wyi_s = WyiX / self.s
-            # # Wj_s = Wj / self.s
-            # return  cls_loss, mmd_loss, disc_loss, intra_inter_loss
-            # ----------------------------------------------------------------------
-
-            # --softmax----------------------------------------------------
-            # x = input
-            # sub_weights = torch.chunk(self.weight, len(self.device_id), dim=0)
-            # sub_biases = torch.chunk(self.bias, len(self.device_id), dim=0)
-            # temp_x = x.cuda(self.device_id[0])
-            # weight = sub_weights[0].cuda(self.device_id[0])
-            # bias = sub_biases[0].cuda(self.device_id[0])
-            # out = F.linear(temp_x, weight, bias)
-            # for i in range(1, len(self.device_id)):
-            #     temp_x = x.cuda(self.device_id[i])
-            #     weight = sub_weights[i].cuda(self.device_id[i])
-            #     bias = sub_biases[i].cuda(self.device_id[i])
-            #     out = torch.cat((out, F.linear(temp_x, weight, bias).cuda(self.device_id[0])), dim=1)   
-            # out = F.linear(pred_src, self.weight, self.bias)
-            # softmax_loss = self.LOSS(out, label_src.squeeze())
-            # return cls_loss, mmd_loss, disc_loss, softmax_loss
-            # ------------------------------------------------------
-
-            # ---cosface----------------------------------
+            #--------------------------- cos(theta) & phi(theta) ---------------------------
+            # data_src  label_src
+            # if self.device_id == None:
             cosine = F.linear(F.normalize(pred_src), F.normalize(self.weight))
-            phi = cosine - self.m
-            # --------------------------- convert label to one-hot ---------------------------
+            # --------------------------- s*cos(theta) ---------------------------
+            output = cosine * self.s
+            # --------------------------- loss ---------------------------
             one_hot = torch.zeros(cosine.size())
-            # if self.device_id != None:
-            #     one_hot = one_hot.cuda(self.device_id[0])
-            # one_hot = one_hot.cuda() if cosine.is_cuda else one_hot
             one_hot = one_hot.to(self.device)
-            one_hot.scatter_(1, label_src.view(-1, 1).long(), 1)
-            # -------------torch.where(out_i = {x_i if condition_i else y_i) -------------
-            output = (one_hot * phi) + ((1.0 - one_hot) * cosine)  # you can use torch.where if your torch.__version__ is 0.4
-            output *= self.s
-            # cosface = self.LOSS(output, label_src.squeeze())
-            cosface = F.nll_loss(F.log_softmax(output, dim=1), label_src.squeeze())
-            return  cls_loss, mmd_loss, disc_loss, cosface
-            # --------------------------------------------
+            one_hot.scatter_(1, label_src.view(-1, 1), 1)
 
+            zero_hot = torch.ones(cosine.size())
+            zero_hot = zero_hot.to(self.device)
+            zero_hot.scatter_(1, label_src.view(-1, 1), 0)
+
+
+            WyiX = torch.sum(one_hot * output, 1)
+            with torch.no_grad():
+                theta_yi = torch.acos(WyiX / self.s)
+                # sigmoid
+                theta_yi = torch.acos(torch.clamp(WyiX / self.s, min=-1.0, max=1.0))
+                weight_yi = 1.0 / (1.0 + torch.exp(-self.k * (theta_yi - self.a)))
+                
+                # steep
+                tmpA = theta_yi - self.a
+                weight_yi = torch.sign(torch.max(tmpA, torch.zeros_like(tmpA)))
+            intra_loss = - weight_yi * WyiX
+            Constant
+            intra_loss = - WyiX
+
+            Wj = zero_hot * output
+            with torch.no_grad():
+                theta_j = torch.acos(Wj / self.s)
+                # sigmoid
+                theta_j = torch.acos(torch.clamp(Wj / self.s, min=-1.0, max=1.0))
+                weight_j = 1.0 / (1.0 + torch.exp(self.k * (theta_j - self.b)))
+                
+                # steep
+                tmpB = self.b - theta_j
+                weight_j = torch.sign(torch.max(tmpB, torch.zeros_like(tmpB)))
+            inter_loss = torch.sum(weight_j * Wj, 1)
+            Constant
+            inter_loss = torch.sum( Wj, 1)
+
+            intra_inter_loss =  intra_loss.mean() + inter_loss.mean()
+            # Wyi_s = WyiX / self.s
+            # Wj_s = Wj / self.s
+            return  cls_loss, mmd_loss, disc_loss, intra_inter_loss
 
         else:
             data_CFE = self.sharedNet(data_src)

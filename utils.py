@@ -1,9 +1,3 @@
-'''
-Description: 
-Author: voicebeer
-Date: 2020-09-08 07:00:34
-LastEditTime: 2021-12-22 01:53:49
-'''
 
 # For SEED data loading
 from torch.utils.data import Dataset, DataLoader

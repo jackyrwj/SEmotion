@@ -57,38 +57,6 @@ class Softmax(nn.Module):
                 bias = sub_biases[i].cuda(self.device_id[i])
                 out = torch.cat((out, F.linear(temp_x, weight, bias).cuda(self.device_id[0])), dim=1)
         
-        # # --------------------------- s*cos(theta) ---------------------------
-        # cosine = out
-        # output = cosine * self.s
-        # # --------------------------- sface loss ---------------------------
-
-        # one_hot = torch.zeros(cosine.size())
-        # if self.device_id != None:
-        #     one_hot = one_hot.cuda(self.device_id[0])
-        # one_hot.scatter_(1, label.view(-1, 1), 1)
-
-        # zero_hot = torch.ones(cosine.size())
-        # if self.device_id != None:
-        #     zero_hot = zero_hot.cuda(self.device_id[0])
-        # zero_hot.scatter_(1, label.view(-1, 1), 0)
-
-
-        # WyiX = torch.sum(one_hot * output, 1)
-        # # with torch.no_grad():
-        # theta_yi = torch.acos(WyiX / self.s)
-        # #     weight_yi = 1.0 / (1.0 + torch.exp(-self.k * (theta_yi - self.a)))
-        # # intra_loss = - weight_yi * WyiX
-
-
-        # Wj = zero_hot * output
-        # # with torch.no_grad():
-        # theta_j = torch.acos(Wj / self.s)
-        # #     weight_j = 1.0 / (1.0 + torch.exp(self.k * (theta_j - self.b)))
-        # # inter_loss = torch.sum(weight_j * Wj, 1)
-
-
-        # return out, theta_yi.nanmean(), torch.nanmean(theta_j, 1).mean()
-    
         return out
 
     def _initialize_weights(self):
@@ -109,7 +77,7 @@ class Softmax(nn.Module):
                     m.bias.data.zero_()
 
 class ArcFace(nn.Module):
-    r"""Implement of ArcFace (https://arxiv.org/pdf/1801.07698v1.pdf):
+    r"""Implement of ArcFace :
         Args:
             in_features: size of each input sample
             out_features: size of each output sample
@@ -170,7 +138,7 @@ class ArcFace(nn.Module):
 
 
 class CosFace(nn.Module):
-    r"""Implement of CosFace (https://arxiv.org/pdf/1801.09414.pdf):
+    r"""Implement of CosFace :
     Args:
         in_features: size of each input sample
         out_features: size of each output sample
@@ -226,7 +194,7 @@ class CosFace(nn.Module):
                + ', m = ' + str(self.m) + ')'
 
 class SphereFace(nn.Module):
-    r"""Implement of SphereFace (https://arxiv.org/pdf/1704.08063.pdf):
+    r"""Implement of SphereFace:
     Args:
         in_features: size of each input sample
         out_features: size of each output sample
@@ -312,7 +280,7 @@ def l2_norm(input, axis = 1):
     return output
 
 class Am_softmax(nn.Module):
-    r"""Implement of Am_softmax (https://arxiv.org/pdf/1801.05599.pdf):
+    r"""Implement of Am_softmax:
     Args:
         in_features: size of each input sample
         out_features: size of each output sample
@@ -434,7 +402,6 @@ class SFaceLoss(nn.Module):
                 cosine = torch.cat((cosine, F.linear(F.normalize(temp_x), F.normalize(weight)).cuda(self.device_id[0])), dim=1)
         # --------------------------- s*cos(theta) ---------------------------
         output = cosine * self.s
-        # --------------------------- sface loss ---------------------------
 
         one_hot = torch.zeros(cosine.size())
         if self.device_id != None:

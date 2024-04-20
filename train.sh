@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES='1,2' python3 -u train_SFace_torch.py
+CUDA_VISIBLE_DEVICES='1,2' python3 -u train_SEmotion_torch.py
 
  \
 --workers_id 0,1 --batch_size 256 --lr 0.1 \
