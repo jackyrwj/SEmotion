@@ -13,24 +13,11 @@ The datasets used in this study include:
 
 You can download the datasets from the [BCMI official website](https://bcmi.sjtu.edu.cn/~seed/index.html).
 
-The dataset structure should be organized as follows:
-
-```
-eeg_feature_smooth/
-    1/
-    2/
-    3/
-ExtractedFeatures/
-    1/
-    2/
-    3/
-```
-
 ## Usage
 To run the experiments, execute the following command:
 
 ```bash
-python msmdaer.py
+python SEmotion/msmdaer.py
 ```
 
 The results will be printed in the terminal.
